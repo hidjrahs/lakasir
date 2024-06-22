@@ -2,12 +2,12 @@
 
 namespace App\Features;
 
-class ProductBarcode
+class PrintSellingA5
 {
-    public $name = 'product-barcode';
+    public $name = 'print-selling-a5';
 
     public function resolve(mixed $scope): mixed
     {
-        return true;
+        return false;
     }
 }

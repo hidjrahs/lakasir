@@ -2,9 +2,9 @@
 
 namespace App\Features;
 
-class ProductBarcode
+class PaymentShortcutButton
 {
-    public $name = 'product-barcode';
+    public $name = 'payment-shortcut-button';
 
     public function resolve(mixed $scope): mixed
     {

@@ -1,5 +1,6 @@
 @php
 use Filament\Facades\Filament;
+use App\Features\{PaymentShortcutButton};
 
 @endphp
 <div class="">
@@ -53,7 +54,7 @@ use Filament\Facades\Filament;
                   <p class="font-semibold"> {{ $item->product->name }}</p>
                   <div class="flex space-x-3 h-8">
                     <button
-                      class="!bg-[#ff6600] rounded-lg px-2 py-1"
+                      class="!bg-lakasir-primary rounded-lg px-2 py-1"
                       wire:click.stop="addCart( {{ $item->product_id  }} )"
                       wire:loading.attr="disabled"
                       >
@@ -78,7 +79,7 @@ use Filament\Facades\Filament;
                 </div>
               </div>
               <div class="items-center text-right space-y-2">
-                <p class="font-semibold text-[#ff6600]">{{ $item->price_format_money }}</p>
+                <p class="font-semibold text-lakasir-primary">{{ $item->price_format_money }}</p>
                 <div class="flex justify-end">
                 <x-filament::input.wrapper class="w-1/2">
                   <x-filament::input
@@ -94,7 +95,7 @@ use Filament\Facades\Filament;
                 </x-filament::input.wrapper>
                 </div>
                 @if($item->discount_price && $item->discount_price > 0)
-                  <p class="font-semibold text-[#ff6600]">{{ $item->final_price_format }}</p>
+                  <p class="font-semibold text-lakasir-primary">{{ $item->final_price_format }}</p>
                 @endif
               </div>
             </div>
@@ -116,7 +117,7 @@ use Filament\Facades\Filament;
           </div>
         </div>
         <button
-          class="py-4 px-2 bg-[#ff6600] text-white rounded-lg w-full"
+          class="py-4 px-2 bg-lakasir-primary text-white rounded-lg w-full"
           x-on:mousedown="$dispatch('open-modal', {id: 'proceed-the-payment'})"
           >{{ __('Proceed to payment') }}</button>
       </div>
@@ -125,7 +126,6 @@ use Filament\Facades\Filament;
   <x-filament::modal
     id="edit-detail"
     width="2xl"
-    x-ref="storeCartForm"
     >
     <form wire:submit.prevent="storeCart">
       <x-slot name="heading">
@@ -148,8 +148,8 @@ use Filament\Facades\Filament;
             <template x-for="paymentMethod in paymentMethods">
               <div
                 x-on:click="cartDetail['payment_method_id'] = paymentMethod.id; $wire.cartDetail['payment_method_id'] = paymentMethod.id;"
-                class="cursor-pointer hover:scale-105 border border-[#ff6600] rounded-md px-4 py-2 flex justify-center dark:text-white text-sm"
-                :class="cartDetail['payment_method_id']  == paymentMethod.id ? 'bg-[#ff6600] text-white' : 'dark:bg-gray-900 '"
+                class="cursor-pointer hover:scale-105 border border-lakasir-primary rounded-md px-4 py-2 flex justify-center dark:text-white text-sm"
+                :class="cartDetail['payment_method_id']  == paymentMethod.id ? 'bg-lakasir-primary text-white' : 'dark:bg-gray-900 '"
                 x-text="paymentMethod.name.substring(0, 8)">
               </div>
             </template>
@@ -180,7 +180,9 @@ use Filament\Facades\Filament;
             x-ref="payedMoney"
             inputMode="numeric"
           >
-          <div class="grid grid-cols-3 gap-4 mt-4">
+          <div class="grid grid-cols-3 gap-4 mt-4" id="calculator-button-shortcut">
+          </div>
+          <div class="grid grid-cols-3 gap-4 mt-4" id="calculator-button">
             <button type="button" class="col-span-3 bg-gray-300 hover:bg-gray-400 p-2 rounded-md text-lg" x-on:click="append('no_changes')">{{ __('No change') }}</button>
             <button type="button" class="bg-gray-300 hover:bg-gray-400 p-2 rounded-md text-lg" x-on:click="append(7)">7</button>
             <button type="button" class="bg-gray-300 hover:bg-gray-400 p-2 rounded-md text-lg" x-on:click="append(8)">8</button>
@@ -201,7 +203,7 @@ use Filament\Facades\Filament;
             </button>
             <button
               wire:loading.attr="disabled"
-              type="submit" class="col-span-3 bg-[#ff6600] hover:bg-[#ff6611] p-2 rounded-md text-white text-lg flex justify-center items-center gap-x-2">
+              type="submit" class="col-span-3 bg-lakasir-primary hover:bg-[#ff6611] p-2 rounded-md text-white text-lg flex justify-center items-center gap-x-2">
               <div wire:loading>
                 <x-filament::loading-indicator class="h-5 w-5"/>
               </div>
@@ -229,8 +231,11 @@ use Filament\Facades\Filament;
     >
     <div class="flex justify-center items-center flex-col">
       <x-heroicon-o-check-circle style="color: rgb(34 197 94); width: 200px" />
-      <p class="font-bold text-4xl">@lang('Success')</p>
-      <p>@lang('Your transaction was successfull')</p>
+      <p class="">@lang('Success')</p>
+      <p class="font-bold text-3xl">
+        @lang('Change'):
+        <span id="changes"></span>
+      </p>
     </div>
     <x-slot name="footer">
       <div class="grid grid-cols-2 gap-x-2">
@@ -249,10 +254,13 @@ use Filament\Facades\Filament;
 <script>
   let selling = null;
   $wire.on('selling-created', (event) => {
+    selling = event.selling;
     $wire.dispatch('close-modal', {id: 'proceed-the-payment'});
 
-    $wire.dispatch('open-modal', {id: 'success-modal'});
-    selling = event.selling;
+    $wire.dispatch('open-modal', {id: 'success-modal', money_changes: selling.money_changes });
+    setTimeout(() => {
+      document.getElementById('changes').innerHTML = moneyFormat(selling.money_changes);
+    }, 300);
   });
   document.getElementById("printReceiptButton").addEventListener('click', (event) => {
     let about = @js($about);
@@ -302,6 +310,11 @@ use Filament\Facades\Filament;
       paymentMethods: $wire.entangle('paymentMethods'),
       cartDetail: @js($cartDetail),
       subtotal: $wire.entangle('total_price'),
+      shortcut(number) {
+        this.$refs.payedMoney.value = this.moneyFormat(number);
+        this.changes();
+        return;
+      },
       append(number) {
         if(number == 'no_changes') {
           this.$refs.payedMoney.value = this.moneyFormat(this.subtotal);
@@ -358,8 +371,27 @@ use Filament\Facades\Filament;
       });
       input.classList.remove('hidden');
     }
+    let calculatorBtn = document.getElementById('calculator-button-shortcut');
+    calculatorBtn.innerHTML = '';
+    let totalPrice = $refs.total.getAttribute('data-value');
+    const suggestionValues = [10000, 15000, 20000, 30000, 50000, 100000];
+    if("@js(feature(PaymentShortcutButton::class))" == 'true') {
+      if (totalPrice < 100000) {
+        suggestionValues.forEach(value => {
+          if (totalPrice < value) {
+            const button = document.createElement('button');
+            button.setAttribute('type', 'button')
+            button.setAttribute('x-on:click', `shortcut(${value})`);
+            button.className = 'bg-gray-300 hover:bg-gray-400 p-2 rounded-md text-lg';
+            button.textContent = value;
+            calculatorBtn.appendChild(button);
+          }
+        });
+      }
+    }
     modalOpened = true;
   });
+
   $wire.on('close-modal', (event) => {
     if(input != undefined) {
       let titleModal = document.getElementById("titleEditDetail");
