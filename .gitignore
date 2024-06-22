@@ -8,10 +8,13 @@
 /public/js/
 /public/css/
 /public/app/
+/public/data/
 /nginx/*.log
 /packages
 # /public/build/manifest.json
 # public/build
+/database/seeders/ProductSeeder.php
+
 tags
 .env
 .env.backup
