@@ -5,9 +5,9 @@
 /storage/*.key
 /storage/debugbar
 /vendor
-/public/js/
-/public/css/
-/public/app/
+# /public/js/
+# /public/css/
+# /public/app/
 /public/data/
 /nginx/*.log
 /packages
