@@ -8,12 +8,12 @@
 # /public/js/
 # /public/css/
 # /public/app/
-/public/data/
+# /public/data/
 /nginx/*.log
 /packages
 # /public/build/manifest.json
 # public/build
-/database/seeders/ProductSeeder.php
+# /database/seeders/ProductSeeder.php
 
 tags
 .env
